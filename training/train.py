@@ -27,8 +27,15 @@ code_cells = ["".join(c.get("source", [])) for c in nb["cells"] if c.get("cell_t
 code = []
 for cell_no, src in enumerate(code_cells):
     code.append(src)
-    if "FEATURE_COLS_LEGACY =" in src:
-        break
+    for cell in nb["cells"]:
+        if cell.get("cell_type") != "code":
+            continue
+
+        src = "".join(cell.get("source", []))
+        exec(src, ns)
+
+        if "def train_lambdarank" in src:
+            break
 
 ns = {"__file__": str(NOTEBOOK), "__name__": "__fawry_notebook__"}
 exec("\n\n".join(code), ns)

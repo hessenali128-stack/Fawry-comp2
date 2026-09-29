@@ -1,0 +1,31 @@
+services:
+  trainer:
+    build:
+      context: .
+      dockerfile: training/Dockerfile
+    volumes:
+      - ./dataset:/app/dataset:ro
+      - ./artifacts:/app/artifacts
+    profiles: ["train"]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: production/Dockerfile
+    depends_on:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      MODEL_BUNDLE: /app/artifacts/model_bundle.joblib
+      SQLITE_PATH: /app/data/fawry.db
+      LIVE_DAY: dataset
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./data:/app/data
+    restart: unless-stopped
